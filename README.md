@@ -16,4 +16,12 @@ TypeScript学習用のリポジトリ
 - string
 - symbol
 - object
-
+- objectの割り当て
+- 型エイリアス
+- 合併型
+- 交差型
+- 配列・タプル
+- null
+- undefined
+- void
+- never
