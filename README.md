@@ -25,3 +25,4 @@ TypeScript学習用のリポジトリ
 - undefined
 - void
 - never
+- 列挙型

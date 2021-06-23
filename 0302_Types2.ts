@@ -229,3 +229,35 @@ namespace Lack {
         throw TypeError();
     };
 }
+
+namespace Enum {
+    enum Language {
+        English,
+        Spanish,
+        Russian,
+    }
+
+    // 明示的にも宣言可能
+    enum Size {
+        Small = 0,
+        Midium = 1,
+        Large = 2,
+    }
+
+    // 分割して宣言可能
+    enum Level {
+        Low = 0,
+        Mid = 1,
+    }
+    enum Level {
+        High,
+    }
+
+    // 型安全性上の問題があるので、使用は非推奨
+    enum Color {
+        Red = 0,
+        Blue = 1,
+    }
+    // 定義外の数値を代入してもエラーにならない
+    let a: Color = 2;
+}
