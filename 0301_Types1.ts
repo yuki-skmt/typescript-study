@@ -181,6 +181,7 @@ namespace ObjectType {
     c.d;
 
     // constでもletと同様に型推論される(特定の値で型付けされるわけではない)
+    // { f: string }
     const e = {
         f: 'x',
     };
