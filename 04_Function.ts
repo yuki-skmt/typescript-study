@@ -169,3 +169,100 @@ namespace MyFunction {
         return {};
     };
 }
+
+namespace Polymorphism {
+    /*=================================================
+     * ジェネリック型パラメータ(多相型パラメータ)
+     * 複数の場所で型レベルの制約を強制するために使われるプレースホルダの型。
+     *================================================*/
+    /*=================================================
+     * 呼び出しシグネチャにTのスコープを持たせる例
+     *================================================*/
+    type Filter = {
+        <T>(array: T[], f: (item: T) => boolean): T[];
+    };
+
+    let filter: Filter = (array, f) => {
+        let newArray: typeof array = [];
+        for (let i of array) {
+            if (f(i)) {
+                newArray.push(i);
+            }
+        }
+        return newArray;
+    };
+
+    // ここでnumberにバインドされる
+    let a = filter([1, 2, 3], (_) => _ > 2);
+
+    // ここでstringにバインドされる
+    let b = filter(['a', 'b'], (_) => _ != 'b');
+
+    // ここで{ firstName: string }にバインドされる
+    let names = [{ firstName: 'beth' }, { firstName: 'caitlyn' }, { firstName: 'xin' }];
+    let c = filter(names, (_) => _.firstName.startsWith('b'));
+
+    /*=================================================
+     * 型エイリアスにTのスコープを持たせる例
+     *================================================*/
+    type Filter2<T> = {
+        (array: T[], f: (item: T) => boolean): T[];
+    };
+
+    // 型アノテートが必要になる
+    let numberFilter: Filter2<number> = (array, f) => {
+        // 実装省略
+        let newArray: typeof array = [];
+        for (let i of array) {
+            if (f(i)) {
+                newArray.push(i);
+            }
+        }
+        return newArray;
+    };
+
+    /*=================================================
+     * ジェネリック宣言のまとめ
+     *================================================*/
+    // (1)完全な呼び出しシグネチャ
+    // Tのスコープが個々のシグネチャに限られる
+    type FilterA = {
+        <T>(array: T[], f: (item: T) => boolean): T[];
+    };
+    // let filter: FilterA = //...
+
+    // (2)完全な呼び出しシグネチャ
+    // Tのスコープがシグネチャ全体に及ぶ
+    type FilterB<T> = {
+        (array: T[], f: (item: T) => boolean): T[];
+    };
+    // let filter: FilterB<number> = //...
+
+    // (3)省略記法の呼び出しシグネチャ
+    // Tのスコープが個々のシグネチャに限られる
+    type FilterC = <T>(array: T[], f: (item: T) => boolean) => T[];
+    // let filter: FilterC = //...
+
+    // (4)省略記法の呼び出しシグネチャ
+    // Tのスコープがシグネチャ全体に及ぶ
+    type FilterD<T> = (array: T[], f: (item: T) => boolean) => T[];
+    // let filter: FilterD<number> = //...
+
+    // (5)名前付き関数の呼び出しシグネチャ
+    // Tのスコープが個々のシグネチャに限られる
+    function filterE<T>(array: T[], f: (item: T) => boolean): T[] {
+        // ...
+        return [];
+    }
+
+    /*=================================================
+     * ジェネリックの型推論
+     *================================================*/
+    function map<T, U>(array: T[], f: (item: T) => U): U[] {
+        let result = [];
+        for (let i = 0; i < array.length; i++) {
+            result[i] = f(array[i]);
+        }
+        return result;
+    }
+}
