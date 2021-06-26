@@ -170,7 +170,7 @@ namespace MyFunction {
     };
 }
 
-namespace Polymorphism {
+namespace Generic {
     /*=================================================
      * ジェネリック型パラメータ(多相型パラメータ)
      * 複数の場所で型レベルの制約を強制するために使われるプレースホルダの型。
@@ -258,11 +258,113 @@ namespace Polymorphism {
     /*=================================================
      * ジェネリックの型推論
      *================================================*/
-    function map<T, U>(array: T[], f: (item: T) => U): U[] {
+    function mymap<T, U>(array: T[], f: (item: T) => U): U[] {
         let result = [];
         for (let i = 0; i < array.length; i++) {
             result[i] = f(array[i]);
         }
         return result;
     }
+
+    // 暗黙的呼び出し(型推論)
+    // => function map<string, boolean>(array: string[], f: (item: string) => boolean): boolean[]
+    mymap(['a', 'b', 'c'], (_) => _ === 'a');
+
+    // 明示的呼び出し(型アノテート)
+    // => function map<string, boolean>(array: string[], f: (item: string) => boolean): boolean[]
+    mymap<string, boolean>(['a', 'b', 'c'], (_) => _ === 'a');
+
+    // 以下のように、明示的に型アノテートしてやる必要がある場合もある。
+    // (関数の引数の型だけを使用してジェネリックの型推論を行うので)
+
+    // エラー
+    // let promise = new Promise((resolve) => resolve(45));
+    // promise.then((result) => result * 4);
+
+    // OK
+    let promise = new Promise<number>((resolve) => resolve(45));
+    promise.then((result) => result * 4);
+}
+
+namespace Polymorphism {
+    /*=================================================
+     * 制約付きポリモーフィズム：二分木(Binary Tree)のサンプル
+     * ノードは以下の2種類存在する。
+     * ・子ノードを持たないLeaf node
+     * ・少なくとも1つの子ノードを持つInner node
+     *================================================*/
+    // 基本となるノード
+    type TreeNode = {
+        value: string;
+    };
+
+    // 常にtrueであるisLeafプロパティを持つ
+    type LeafNode = TreeNode & {
+        isLeaf: true;
+    };
+
+    // 子ノードであるTreeNodeを1～2つchildrenプロパティとして持つ
+    type InnerNode = TreeNode & {
+        children: [TreeNode] | [TreeNode, TreeNode];
+    };
+
+    // TをTreeNodeとそのサブタイプに限定している
+    function mapNode<T extends TreeNode>(node: T, f: (value: string) => string): T {
+        return { ...node, value: f(node.value) };
+    }
+
+    /*=================================================
+     * 複数の制約付きポリモーフィズム
+     *================================================*/
+    // 辺を持つことを表現する型
+    type HasSides = { numberOfSides: number };
+
+    // 辺が長さを持つことを表現する型
+    type SidesHaveLength = { sideLength: number };
+
+    // 長さのある辺を備えていることを表現する
+    function logPerimeter<Shape extends HasSides & SidesHaveLength>(s: Shape): Shape {
+        console.log(s.numberOfSides * s.sideLength);
+        return s;
+    }
+
+    type Square = HasSides & SidesHaveLength;
+    let square: Square = { numberOfSides: 4, sideLength: 3 };
+    logPerimeter(square);
+
+    /*=================================================
+     * 可変長引数をモデル化
+     *================================================*/
+    // 制限付きポリモーフィズムを使って、可変長引数をモデル化できる
+    // 何らかの引数のセット(個数不明)であるTを取り、何らかの型Rを返す
+    function call<T extends unknown[], R>(f: (...args: T) => R, ...args: T): R {
+        return f(...args);
+    }
+
+    function fill(length: number, value: string): string[] {
+        return Array.from({ length }, () => value);
+    }
+
+    call(fill, 10, 'a');
+
+    /*=================================================
+     * ジェネリック型のデフォルトの型
+     *================================================*/
+    // 指定がなかった場合にデフォルト型を使用する
+    type MyEvent<T extends HTMLElement = HTMLElement> = {
+        target: T;
+        type: string;
+    };
+
+    // 複数指定する場合はデフォルト型を持たないジェネリック型の後に指定する必要がある
+    type MyEvent2<Type extends string, T extends HTMLElement = HTMLElement> = {
+        target: T;
+        type: Type;
+    };
+
+    // エラー
+    // type MyEvent3<T extends HTMLElement = HTMLElement, Type extends string> = {
+    //     target: T;
+    //     type: Type;
+    // };
 }
