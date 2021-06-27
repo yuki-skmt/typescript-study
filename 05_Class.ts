@@ -33,7 +33,10 @@ namespace Chess {
         distanceFrom(position: Position) {
             return {
                 rank: Math.abs(position.rank - this.rank),
-                file: Math.abs(position.file.charCodeAt(0) - this.file.charCodeAt(0)),
+                file: Math.abs(
+                    position.file.charCodeAt(0) -
+                        this.file.charCodeAt(0)
+                ),
             };
         }
     }
@@ -41,7 +44,11 @@ namespace Chess {
     // 抽象クラス
     abstract class Piece {
         protected position: Position;
-        constructor(private readonly color: Color, file: File, rank: Rank) {
+        constructor(
+            private readonly color: Color,
+            file: File,
+            rank: Rank
+        ) {
             this.position = new Position(file, rank);
         }
         // デフォルトの実装
@@ -193,4 +200,234 @@ namespace Interface {
     // type F = {
     //     bad(x: number): string;
     // };
+}
+
+namespace StructuralTyping {
+    /*=================================================
+     * 構造的型付け
+     *================================================*/
+    class Zebra {
+        trot() {}
+    }
+    class Poodle {
+        trot() {}
+    }
+    let ambleAround = (animal: Zebra) => {
+        animal.trot();
+    };
+
+    let zebra = new Zebra();
+    let poodle = new Poodle();
+    ambleAround(zebra);
+    // TypeScriptにおいては名前ではなく構造にもとづいて型付けされる。
+    // Zebra型を引数に取る関数に、Zebra型と同じ構造のPoodle型を渡せる。
+    ambleAround(poodle);
+}
+
+namespace ValuesAndTypes {
+    /*=================================================
+     * 文脈に基づく語句の解決
+     *================================================*/
+    // 値と型で名前空間が分けられている
+    // 値
+    let a = 999;
+    function b() {}
+
+    // 型
+    type a = number;
+    interface b {
+        (): void;
+    }
+
+    // 文脈から値と推論
+    if (a + 1 > 3) {
+    }
+
+    // 文脈から型と推論
+    let x: a = 3;
+
+    // クラス、列挙型は両方の名前空間を使用する。
+    class C {}
+    // 前者のCは「クラスのインスタンス型」、後者のCは値を表す。
+    let c: C = new C();
+
+    enum E {
+        F,
+        G,
+    }
+    // 前者のCは「列挙型Eの型」、後者のEは値を表す。
+    let e: E = E.F;
+
+    /*=================================================
+     * コンストラクタシグネチャ
+     *================================================*/
+    type State = {
+        [ket: string]: string;
+    };
+
+    class StringDatabase {
+        state: State = {};
+        get(key: string): string | null {
+            return key in this.state ? this.state[key] : null;
+        }
+        set(key: string, value: string): void {
+            this.state[key] = value;
+        }
+        static from(state: State) {
+            let db = new StringDatabase();
+            for (let key in state) {
+                db.set(key, state[key]);
+            }
+            return db;
+        }
+    }
+
+    // これによって以下の2つの型が生成される。
+    interface StringDatabase {
+        state: State;
+        get(key: string): string | null;
+        set(key: string, value: string): void;
+    }
+
+    interface StringDatabaseConstructor {
+        // コンストラクタシグネチャ
+        // 特定の型でインスタンス化できることを示す記法
+        new (): StringDatabase;
+        from(state: State): StringDatabase;
+    }
+}
+
+namespace MixIn {
+    /*=================================================
+     * 多重継承をシミュレート
+     *================================================*/
+    type ClassConstructor<T> = new (...args: any[]) => T;
+    function withEzDebug<
+        C extends ClassConstructor<{ getDebugValue(): object }>
+    >(Class: C) {
+        return class extends Class {
+            debug() {
+                let Name = this.constructor.name;
+                let value = this.getDebugValue();
+                return Name + '(' + JSON.stringify(value) + ')';
+            }
+        };
+    }
+
+    class HardToDebugUser {
+        constructor(
+            private id: number,
+            private firstName: string,
+            private lastName: string
+        ) {}
+        getDebugValue() {
+            return {
+                id: this.id,
+                name: this.firstName + ' ' + this.lastName,
+            };
+        }
+    }
+
+    let User = withEzDebug(HardToDebugUser);
+    let user = new User(3, 'Emma', 'Gluzman');
+    console.log(user.debug());
+}
+
+// デコレータ省略
+
+namespace Final {
+    /*=================================================
+     * 継承の禁止(finalをシミュレート)
+     *================================================*/
+    class MessageQueue {
+        private constructor(private messages: string[]) {}
+
+        // プライベートコンストラクタは、継承だけでなく直接のインスタンス化をも禁止してしまうので、
+        // 別途インスタンス化の方法を提供する必要がある。
+        static create(messages: string[]) {
+            return new MessageQueue(messages);
+        }
+    }
+
+    // エラー。継承できない。
+    // class BadQueue extends MessageQueue {}
+
+    // エラー。直接インスタンス化できない。
+    // let queue = new MessageQueue([]);
+
+    // 独自定義のメソッドでインスタンス化する
+    let queue = MessageQueue.create([]);
+}
+
+namespace FactoryPattern {
+    /*=================================================
+     * デザインパターン：ファクトリーパターン
+     *================================================*/
+    type Shoe = {
+        purpose: string;
+    };
+
+    class BalletFlat implements Shoe {
+        purpose = 'dancing';
+    }
+
+    class Boot implements Shoe {
+        purpose = 'woodcutting';
+    }
+
+    class Sneaker implements Shoe {
+        purpose = 'walking';
+    }
+
+    let Shoe = {
+        // 合併型を使うことで、.createを型安全に保つ。
+        create(type: 'balletFlat' | 'boot' | 'sneaker'): Shoe {
+            // 合併型をswitch分岐すると全ての型を網羅しているかをチェックできる。(型安全)
+            switch (type) {
+                case 'balletFlat':
+                    return new BalletFlat();
+                case 'boot':
+                    return new Boot();
+                case 'sneaker':
+                    return new Sneaker();
+            }
+        },
+    };
+    let shoe = Shoe.create('boot');
+}
+namespace BuilderPattern {
+    /*=================================================
+     * デザインパターン：ビルダーパターン
+     * オブジェクトの構築とそのオブジェクトを実際に実装する方法を分離する
+     *================================================*/
+    class RequestBuilder {
+        private data: object | null = null;
+        private method: 'get' | 'post' | null = null;
+        private url: string | null = null;
+
+        setData(data: object | null): this {
+            this.data = data;
+            return this;
+        }
+
+        setMethod(method: 'get' | 'post'): this {
+            this.method = method;
+            return this;
+        }
+
+        setURL(url: string): this {
+            this.url = url;
+            return this;
+        }
+
+        send() {
+            console.log('send!');
+        }
+    }
+
+    new RequestBuilder()
+        .setURL('/users')
+        .setMethod('get')
+        .setData({ firstName: 'Anna' })
+        .send();
 }
