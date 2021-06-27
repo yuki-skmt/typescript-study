@@ -117,7 +117,9 @@ namespace MySet {
 }
 
 namespace Interface {
-    // 型エイリアスを用いた例
+    /*=================================================
+     * 型エイリアスを用いた例
+     *================================================*/
     type Food = {
         calories: number;
         tasty: boolean;
@@ -129,7 +131,9 @@ namespace Interface {
         sweet: boolean;
     };
 
-    // インターフェースを用いた例
+    /*=================================================
+     * インターフェースを用いた例
+     *================================================*/
     interface IFood {
         calories: number;
         tasty: boolean;
@@ -140,4 +144,53 @@ namespace Interface {
     interface ICake extends IFood {
         sweet: boolean;
     }
+
+    /*=================================================
+     * 型エイリアスとインターフェースの違い
+     *================================================*/
+    // (1) 型エイリアスの方が任意に型指定できるので汎用的
+    // これはインターフェースでは表現不可
+    type A = number;
+    type B = A | string;
+
+    // (2) 割り当て可能性のチェック有無
+    interface C {
+        good(x: number): string;
+        bad(x: number): string;
+    }
+
+    // インターフェースの場合、拡張時に割り当て可能性をチェックするので下記はエラーとなる。
+    // 型 '(x: string) => string' を型 '(x: number) => string' に割り当てることはできません。
+    // interface D extends C {
+    //     good(x: string | number): string;
+    //     bad(x: string): string;
+    // }
+
+    type C2 = {
+        good(x: number): string;
+        bad(x: number): string;
+    };
+
+    // 型エイリアス(交差型)の場合、拡張元と拡張先を結合し、コンパイルエラーを回避する。
+    type D2 = C2 & {
+        good(x: string | number): string;
+        bad(x: string): string;
+    };
+
+    // (3) 同名シンボルが存在する場合の自動マージの有無
+    // マージされる
+    interface E {
+        good(x: number): string;
+    }
+    interface E {
+        bad(x: number): string;
+    }
+
+    // エラー。識別子 'F' が重複しています。
+    // type F = {
+    //     good(x: number): string;
+    // };
+    // type F = {
+    //     bad(x: number): string;
+    // };
 }
