@@ -1,4 +1,7 @@
 namespace Chess {
+    /*=================================================
+     * クラス
+     *================================================*/
     class Game {
         private pieces = Game.makePieces();
         private static makePieces() {
@@ -98,6 +101,9 @@ namespace Chess {
 }
 
 namespace MySet {
+    /*=================================================
+     * 戻り値の型アノテーションとしてのthis
+     *================================================*/
     class Set {
         values: number[] = [];
         has(value: number): boolean {
@@ -299,7 +305,7 @@ namespace ValuesAndTypes {
 
 namespace MixIn {
     /*=================================================
-     * 多重継承をシミュレート
+     * ミックスイン(多重継承)のシミュレート
      *================================================*/
     type ClassConstructor<T> = new (...args: any[]) => T;
     function withEzDebug<
@@ -337,7 +343,7 @@ namespace MixIn {
 
 namespace Final {
     /*=================================================
-     * 継承の禁止(finalをシミュレート)
+     * final(継承の禁止)のシミュレート
      *================================================*/
     class MessageQueue {
         private constructor(private messages: string[]) {}
