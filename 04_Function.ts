@@ -286,7 +286,7 @@ namespace Generic {
     promise.then((result) => result * 4);
 }
 
-namespace Polymorphism {
+namespace ConstraintPolymorphism {
     /*=================================================
      * 制約付きポリモーフィズム：二分木(Binary Tree)のサンプル
      * ノードは以下の2種類存在する。

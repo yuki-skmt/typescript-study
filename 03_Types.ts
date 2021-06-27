@@ -352,7 +352,13 @@ namespace Tuple {
 
     // 可変長の要素もサポートしている
     let c: [string, ...string[]] = ['a', 'b', 'c', 'd', 'e'];
-    let d: [number, boolean, string, ...string[]] = [1, true, 'a', 'b', 'c'];
+    let d: [number, boolean, string, ...string[]] = [
+        1,
+        true,
+        'a',
+        'b',
+        'c',
+    ];
 
     // 読み取り専用型もサポートしている
     let e: readonly [number, string] = [1, '2'];
