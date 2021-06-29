@@ -107,3 +107,108 @@ namespace Contravariance {
     };
     // clone(CrowToBird); // エラー。反変。
 }
+
+namespace TypeWidening {
+    /*=================================================
+     * 型の拡大
+     *================================================*/
+    const a = 'x'; // 'x'
+    let b = a; // stringに拡大して型推論
+
+    // null、undefinedで初期化された場合、anyになる
+    let c = null;
+    c = 3;
+    c = b;
+
+    function x() {
+        let a = null;
+        a = 3;
+        a = 'b';
+        return a;
+    }
+    // スコープを離れると明確な型を割り当てる
+    let d = x(); // string
+}
+
+namespace ConstAssertion {
+    /*=================================================
+     * constアサーション
+     *================================================*/
+    let a = { x: 3 }; // { x: number }
+    let b: { x: 3 }; // { x: 3 }
+    // constアサーションによって、型の拡大を抑えることができる
+    let c = { x: 3 } as const; // { readonly x: 3 }
+
+    // 深くネストされたデータ構造にconstアサーションすると再帰的にreadonlyにできる
+    let d = [1, { x: 2 }]; // (number | { x: number })[]
+    let e = [1, { x: 2 }] as const; // readonly [1, {readonly x: 2;}]
+}
+
+namespace ExcessPropertyChecking {
+    /*=================================================
+     * 過剰プロパティチェック
+     * ・フレッシュ(新鮮)なオブジェクトリテラル型Tを別の型Uに割り当てるとき
+     * TypeScriptはエラーを報告する。
+     *================================================*/
+    /*=================================================
+     * フレッシュ(新鮮)なオブジェクトリテラル型とは？
+     * ・オブジェクトリテラルからTypeScriptが推論する型。
+     * ・型アサーションを使用するか、変数割り当てされれば、「フレッシュ」でなくなる。
+     *================================================*/
+    type Options = {
+        baseURL: string;
+        cacheSize?: number;
+        tier?: 'prod' | 'dev';
+    };
+
+    class API {
+        constructor(private options: Options) {}
+    }
+
+    new API({
+        baseURL: 'https://api.mysite.com',
+        // tierr: 'prod', // 誤字。エラー
+    });
+
+    /*
+    このとき、
+    { baseURL: string, cacheSize?: number, tier?: 'prod' | 'dev'}が期待されているところに
+    { baseURL: string, tierr: string }を渡した。
+    渡された型 <: 期待される型(共変)なのでOKとなるはずだが、TypeScriptはエラーを検知した。
+    (過剰プロパティチェック)
+    */
+
+    // 例1
+    // フレッシュなまま渡しているので過剰プロパティチェックが行われる
+    new API({
+        baseURL: 'https://api.mysite.com',
+        // badTier: 'prod', // エラー
+    });
+
+    // 例2
+    // 型アサーションによってフレッシュではなくなる
+    // =>過剰プロパティチェックを行わない
+    new API({
+        baseURL: 'https://api.mysite.com',
+        badTier: 'prod',
+    } as Options);
+
+    // 例3
+    let options = {
+        baseURL: 'https://api.mysite.com',
+        badTier: 'prod',
+    };
+    // 既に割り当て済み
+    // =>過剰プロパティチェックを行わない
+    new API(options);
+
+    // 例4
+    // フレッシュなまま渡しているので過剰プロパティチェックが行われる
+    let options2: Options = {
+        baseURL: 'https://api.mysite.com',
+        // badTier: 'prod', // エラー
+    };
+    // 既に割り当て済み
+    // =>過剰プロパティチェックを行わない
+    new API(options2);
+}
