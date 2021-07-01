@@ -212,3 +212,56 @@ namespace ExcessPropertyChecking {
     // =>過剰プロパティチェックを行わない
     new API(options2);
 }
+
+namespace TypeRefinement {
+    /*=================================================
+     * 型の絞り込み
+     * ・制御フロー文(if, ?, ||, switch)や型クエリー(typeof, instanceof)
+     * 　をもとにコンパイラは型を特定する。
+     *================================================*/
+    type Unit = 'cm' | 'px' | '%';
+    let units: Unit[] = ['cm', 'px', '%'];
+    let parseUnit = (value: string) => {
+        for (let i = 0; i < units.length; i++) {
+            if (value.endsWith(units[i])) {
+                return units[i];
+            }
+        }
+        return null;
+    };
+    type Width = {
+        unit: Unit;
+        value: number;
+    };
+    let parseWidth = (
+        width: number | string | null | undefined
+    ): Width | null => {
+        // この時点ではwidthは(number | string | null | undefined)
+        if (width == null) {
+            // nullもしくはundefinedの場合
+            return null;
+        }
+
+        // nullとの緩やかな同値チェックをくぐり抜けたということは、
+        // 少なくともnullやundefinedではないはず
+        // widthは(number | string)になる
+        //  => 型の絞り込み！
+        if (typeof width === 'number') {
+            return { unit: 'px', value: width };
+        }
+
+        // typeofの結果がnumberではないということは、
+        // widthはstringになる
+        //  => 型の絞り込み！
+        // この時点ではunitは(Unit | null)
+        let unit = parseUnit(width);
+
+        if (unit) {
+            // if (unit)がTruthyだったということは、nullではないはず
+            // unitはUnitになる
+            //  => 型の絞り込み！
+            return { unit, value: parseFloat(width) };
+        }
+        return null;
+    };
+}
