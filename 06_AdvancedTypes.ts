@@ -213,55 +213,51 @@ namespace ExcessPropertyChecking {
     new API(options2);
 }
 
-namespace TypeRefinement {
+namespace TaggedUnionType {
     /*=================================================
-     * 型の絞り込み
-     * ・制御フロー文(if, ?, ||, switch)や型クエリー(typeof, instanceof)
-     * 　をもとにコンパイラは型を特定する。
+     * タグ付き合併型
+     * ・TypeScriptに合併型の型を推論させるために、タグつきの型を使用すること。
+     * 　以下の条件を満たすことを推奨する。
+     * 　1. 合併型のそれぞれのケースにおいて同じ場所に存在すること。
+     * 　2. リテラル型として片付けされていること。
+     * 　3. ジェネリックでないこと。
+     * 　4. 互いに排他的であること。
      *================================================*/
-    type Unit = 'cm' | 'px' | '%';
-    let units: Unit[] = ['cm', 'px', '%'];
-    let parseUnit = (value: string) => {
-        for (let i = 0; i < units.length; i++) {
-            if (value.endsWith(units[i])) {
-                return units[i];
-            }
-        }
-        return null;
+    type UserTextEvent = {
+        type: 'TextEvent';
+        value: string;
+        target: HTMLInputElement;
     };
-    type Width = {
-        unit: Unit;
-        value: number;
+    type UserMouseEvent = {
+        type: 'MouseEvent';
+        value: [number, number];
+        target: HTMLElement;
     };
-    let parseWidth = (
-        width: number | string | null | undefined
-    ): Width | null => {
-        // この時点ではwidthは(number | string | null | undefined)
-        if (width == null) {
-            // nullもしくはundefinedの場合
-            return null;
-        }
+    type UserEvent = UserTextEvent | UserMouseEvent;
 
-        // nullとの緩やかな同値チェックをくぐり抜けたということは、
-        // 少なくともnullやundefinedではないはず
-        // widthは(number | string)になる
-        //  => 型の絞り込み！
-        if (typeof width === 'number') {
-            return { unit: 'px', value: width };
+    // typeof で型判定した場合
+    let hundle1 = (event: UserEvent) => {
+        if (typeof event.value === 'string') {
+            event.value; // string
+            // event.targetの型を絞り込めない
+            event.target; // HTMLInputElement | HTMLElement(!!!)
+            return;
         }
+        event.value; // [number, number]
+        // event.targetの型を絞り込めない
+        event.target; // HTMLInputElement | HTMLElement(!!!)
+    };
 
-        // typeofの結果がnumberではないということは、
-        // widthはstringになる
-        //  => 型の絞り込み！
-        // この時点ではunitは(Unit | null)
-        let unit = parseUnit(width);
-
-        if (unit) {
-            // if (unit)がTruthyだったということは、nullではないはず
-            // unitはUnitになる
-            //  => 型の絞り込み！
-            return { unit, value: parseFloat(width) };
+    // タグ付き合併型を使用した例
+    let hundle2 = (event: UserEvent) => {
+        if (event.type === 'TextEvent') {
+            event.value; // string
+            // event.targetの型まで絞り込める
+            event.target; // HTMLInputElement
+            return;
         }
-        return null;
+        event.value; // [number, number]
+        // event.targetの型まで絞り込める
+        event.target; // HTMLElement
     };
 }
