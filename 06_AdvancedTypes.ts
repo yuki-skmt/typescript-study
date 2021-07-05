@@ -261,3 +261,135 @@ namespace TaggedUnionType {
         event.target; // HTMLElement
     };
 }
+
+namespace Totality {
+    /*=================================================
+     * 完全性
+     *================================================*/
+    type WeekDay = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri';
+    type Day = WeekDay | 'Sat' | 'Sun';
+
+    // エラー。全てのケースが網羅されていない
+    // let getNextDay = (w: WeekDay): Day => {
+    //     switch (w) {
+    //         case 'Mon':
+    //             return 'Tue';
+    //     }
+    // };
+
+    // エラー。全てのケースが網羅されていない
+    // let isBig = (n: number): boolean => {
+    //     if (n >= 100) {
+    //         return true;
+    //     }
+    // };
+}
+
+namespace LookupType {
+    /*=================================================
+     * ルックアップ型
+     *================================================*/
+    type APIResponse = {
+        user: {
+            userId: string;
+            friendList: {
+                count: number;
+                friends: {
+                    firstName: string;
+                    lastName: string;
+                }[];
+            };
+        };
+    };
+    // キーを指定することで型を取得できる
+    type FriendList = APIResponse['user']['friendList'];
+}
+
+namespace Keyof {
+    /*=================================================
+     * keyof演算子
+     *================================================*/
+    type APIResponse = {
+        user: {
+            userId: string;
+            friendList: {
+                count: number;
+                friends: {
+                    firstName: string;
+                    lastName: string;
+                }[];
+            };
+        };
+    };
+    // オブジェクトのキーを文字列リテラル型の合併として取得できる。
+    type ResponseKeys = keyof APIResponse; // 'user'
+    type UserKeys = keyof APIResponse['user']; // 'userId' | 'friendList'
+    type FriendListKeys = keyof APIResponse['user']['friendList']; // 'count' | 'friend'
+}
+
+namespace TypeSafeGetter {
+    /*=================================================
+     * 型安全なgetter
+     * ・Lookup型とkeyofを組み合わせると、型安全なgetterを実装できる
+     *================================================*/
+    type Get = {
+        <O extends object, K1 extends keyof O>(o: O, k1: K1): O[K1];
+        <
+            O extends object,
+            K1 extends keyof O,
+            K2 extends keyof O[K1]
+        >(
+            o: O,
+            k1: K1,
+            k2: K2
+        ): O[K1][K2];
+        <
+            O extends object,
+            K1 extends keyof O,
+            K2 extends keyof O[K1],
+            K3 extends keyof O[K1][K2]
+        >(
+            o: O,
+            k1: K1,
+            k2: K2,
+            k3: K3
+        ): O[K1][K2][K3];
+    };
+
+    let get: Get = (object: any, ...keys: string[]) => {
+        let result = object;
+        keys.forEach((k) => (result = result[k]));
+        return result;
+    };
+
+    type ActivityLog = {
+        lastEvent: Date;
+        events: {
+            id: string;
+            timestamp: Date;
+            type: 'Read' | 'Write';
+        }[];
+    };
+
+    let now = new Date(2020, 3, 8);
+    let activityLog: ActivityLog = {
+        lastEvent: now,
+        events: [{ id: '0001', timestamp: now, type: 'Read' }],
+    };
+    let lastEvent = get(activityLog, 'lastEvent');
+}
+
+namespace RecordType {
+    /*=================================================
+     * レコード型
+     * ・通常のインデックスシグネチャではキーにできるのはstring, numberのみ
+     * ・Record型ではstring, numberのサブタイプもキーに使用できる
+     *================================================*/
+    type WeekDay = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri';
+    type Day = WeekDay | 'Sat' | 'Sun';
+
+    // エラー。全てのケースが網羅されていない
+    // let nextDay: Record<WeekDay, Day> = {
+    //     Mon: 'Tue',
+    // };
+}
