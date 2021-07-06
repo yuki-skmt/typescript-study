@@ -393,3 +393,84 @@ namespace RecordType {
     //     Mon: 'Tue',
     // };
 }
+
+namespace MappedType {
+    /*=================================================
+     * マップ型
+     * ・静的型付けのための機能
+     * ・ルックアップ型と組み合わせると多彩な制約を表現できる
+     *================================================*/
+    type WeekDay = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri';
+    type Day = WeekDay | 'Sat' | 'Sun';
+
+    // エラー。全てのケースが網羅されていない
+    // let nextDay: { [K in WeekDay]: Day } = {
+    //     Mon: 'Tue',
+    // };
+
+    // 色々な使い方
+    type Account = {
+        id: number;
+        isEmployee: boolean;
+        notes: string[];
+    };
+
+    // 全てのフィールドを省略可能にする
+    type OptionalAccount = {
+        [K in keyof Account]?: Account[K];
+    };
+
+    // 全てのフィールドをnull許容にする
+    type NullableAccount = {
+        [K in keyof Account]: Account[K] | null;
+    };
+
+    // 全てのフィールドを読み取り専用にする
+    type ReadonlyAccount = {
+        readonly [K in keyof Account]: Account[K];
+    };
+
+    // 全てのフィールドを再び書き込み可能にする
+    type Account2 = {
+        -readonly [K in keyof ReadonlyAccount]: Account[K];
+    };
+
+    // 全てのフィールドを再び必須にする
+    type Account3 = {
+        [K in keyof OptionalAccount]-?: Account[K];
+    };
+
+    // 組み込みのマップ型省略
+}
+
+namespace CompanionObjectPattern {
+    /*=================================================
+     * コンパニオンオブジェクトパターン
+     * ・型と値の名前空間に同名の(結びつけられた)型を宣言する
+     * ・型と値の情報をグループ化するのに役立つ
+     * ・一度にインポートできる
+     *================================================*/
+    type Unit = 'EUR' | 'GBP' | 'JPY' | 'USD';
+    type Currency = {
+        unit: Unit;
+        value: number;
+    };
+
+    let Currency = {
+        from(value: number, unit: Unit): Currency {
+            return {
+                unit: unit,
+                value,
+            };
+        },
+    };
+
+    // Currencyを型として使用できる
+    let amountDue: Currency = {
+        unit: 'JPY',
+        value: 83733.1,
+    };
+
+    // Currencyを値として使用できる
+    let otherAmountDue = Currency.from(330, 'EUR');
+}
