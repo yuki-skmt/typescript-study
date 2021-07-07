@@ -569,3 +569,49 @@ namespace ConditionalType {
     type P = { a: number };
     type Q = InstanceType<O>; // { a: number }
 }
+
+namespace EscapeHatch {
+    /*=================================================
+     * 完璧に型付けする余裕がないときの様々な次善策。
+     * ・あくまで次善策なので、多様せざるを得ない状況になった場合設計を見直すべき。
+     *================================================*/
+    // 型アサーション
+    // ある型がその型のサブタイプもしくはスーパータイプであることを明示できる。
+    let formatInput = (input: string) => {
+        //
+    };
+
+    let getUserInput = (): string | number => {
+        return '';
+    };
+
+    let input = getUserInput();
+
+    // 型アサーション
+    formatInput(input as string);
+    formatInput(<string>input); // 非推奨
+
+    // 非nullアサーション
+    // ある型がnullやundefinedでないことを明示できる。
+    type Dialog = {
+        id?: string;
+    };
+
+    let closeDialog = (dialog: Dialog) => {
+        if (!dialog.id) {
+            return;
+        }
+        setTimeout(() => {
+            removeFromDOM(
+                dialog,
+                // 非nullアサーション
+                document.getElementById(dialog.id!)!
+            );
+        });
+    };
+
+    let removeFromDOM = (dialog: Dialog, element: Element) => {
+        element.parentNode!.removeChild(element);
+        delete dialog.id;
+    };
+}
