@@ -465,6 +465,9 @@ namespace CompanionObjectPattern {
         },
     };
 
+    // これだけで型・値の両方インポートできる
+    // import { Currency } from './Currency'
+
     // Currencyを型として使用できる
     let amountDue: Currency = {
         unit: 'JPY',
@@ -473,4 +476,96 @@ namespace CompanionObjectPattern {
 
     // Currencyを値として使用できる
     let otherAmountDue = Currency.from(330, 'EUR');
+}
+
+namespace TupleTypeInference {
+    /*=================================================
+     * タプルについての型推論の改善
+     *================================================*/
+    // 配列の型推論
+    let a = [1, true]; // (number | boolean)[]
+
+    // より厳密な型付けを求めたい場合
+    // 型アサーションを使う。
+    let b = [1, true] as [number, boolean]; // [number, boolean]
+
+    // 型アサーションを使いたくない場合。
+    // レストパラメータを使う
+    function tuple<T extends unknown[]>(...ts: T): T {
+        return ts;
+    }
+    let c = tuple(1, true); // [number, boolean]
+}
+
+namespace UserDefinedTypeGuard {
+    /*=================================================
+     * ユーザー定義型ガード
+     *================================================*/
+    // 型ガードを自分で宣言する場合の記法
+    // スコープを離れても型の絞り込みを継続できる。
+    let isString = (a: unknown): a is string => {
+        return typeof a === 'string';
+    };
+    isString('a'); // true
+    isString(9); // false
+
+    let parseInput = (input: string | number) => {
+        let formattedInput: string;
+        if (isString(input)) {
+            // 型ガードをしない場合、ここでエラー
+            formattedInput = input.toUpperCase();
+        }
+    };
+}
+
+namespace ConditionalType {
+    /*=================================================
+     * 条件型
+     * ・型付けを分岐できる。
+     *================================================*/
+    type IsString<T> = T extends string ? true : false;
+
+    // 分配条件型
+    // 分岐全体に合併型を分配できる。
+    type ToArray<T> = T extends unknown ? T[] : T[];
+    type A = ToArray<number>; // number[]
+    type B = ToArray<number | string>; // number[] | string[]
+
+    // inferキーワード
+    // 使わない例
+    type ElementType<T> = T extends unknown[] ? T[number] : T;
+    type C = ElementType<number[]>; // number
+
+    // 使う例
+    type ElementType2<T> = T extends (infer U)[] ? U : T;
+    type D = ElementType2<number[]>; // number
+
+    // 組み込みの条件型
+    // 1. Exclude<T, U>
+    // Tには含まれているがUに含まれていない型を算出
+    type E = number | string;
+    type F = string;
+    type G = Exclude<E, F>; // number
+
+    // 2. Extract<T, U>
+    // Tに含まれている型のうちUに割り当て可能な型を算出
+    type H = number | string;
+    type I = string;
+    type J = Extract<E, F>; // string
+
+    // 3. NonNullable<T>
+    // Tからnullとundefinedを除外した型を算出
+    type K = { a?: number | null };
+    type L = NonNullable<K['a']>; // number
+
+    // 4. ReturnType<F>
+    // 関数の戻り値を算出
+    type M = (a: number) => string;
+    type N = ReturnType<M>; // string
+
+    // 5. InstanceType<C>
+    // クラスコンストラクタのインスタンス型を算出
+    type O = { new (): P };
+    type P = { a: number };
+    type Q = InstanceType<O>; // { a: number }
 }
