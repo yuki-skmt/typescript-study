@@ -625,3 +625,36 @@ namespace EscapeHatch {
     // 割り当てアサーションをしているのでOK。
     userId2.toUpperCase();
 }
+
+namespace NominalType {
+    /*=================================================
+     * 名前的型をシミュレートする
+     *================================================*/
+    // TypeScriptは構造的型なので、構造が同じものを区別できない
+    // brand型を
+    type CompanyID = string & { readonly brand: unique symbol };
+    type OrderID = string & { readonly brand: unique symbol };
+    type UserID = string & { readonly brand: unique symbol };
+
+    let CompanyID = (id: string) => {
+        return id as CompanyID;
+    };
+    let OrderID = (id: string) => {
+        return id as OrderID;
+    };
+    let UserID = (id: string) => {
+        return id as UserID;
+    };
+
+    let queryForUser = (id: UserID) => {
+        //
+    };
+
+    let userId = UserID('AAAA');
+    let companyId = CompanyID('0000');
+    queryForUser(userId);
+    // エラー。名前的に解決している。
+    // queryForUser(companyId);
+}
+
+// プロトタイプ拡張 省略
