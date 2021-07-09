@@ -614,4 +614,14 @@ namespace EscapeHatch {
         element.parentNode!.removeChild(element);
         delete dialog.id;
     };
+
+    // 明確な割り当てアサーション
+    let userId1: string;
+    let userId2!: string;
+
+    // エラー
+    // userId1.toUpperCase();
+
+    // 割り当てアサーションをしているのでOK。
+    userId2.toUpperCase();
 }
